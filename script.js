@@ -55,6 +55,13 @@ const siteData = {
       body: "1年生から聞こえてきたのは、「先輩が優しい」という声。人の優しさも、日習のいいところ。"
     }
   ],
+  visitPhoto: {
+    title: "今日は、理工学部で模擬講義！",
+    src: "assets/photos/visit-20260908.jpg",
+    alt: "理工学部の教室で学部見学会の模擬講義に参加する日習のみなさん",
+    caption: "日習のみなさんと、AIで学校紹介サイトを制作中。",
+    date: "2026年9月8日 · 日本大学理工学部 学部見学会"
+  },
   mission: {
     word: "自主創造",
     reading: "JISHU SOZO",
@@ -273,6 +280,14 @@ renderHeroArt();
 renderTicker();
 renderNumbers();
 renderFeatures();
+setText("[data-visit-title]", siteData.visitPhoto.title);
+setText("[data-visit-caption]", siteData.visitPhoto.caption);
+setText("[data-visit-date]", siteData.visitPhoto.date);
+const visitPhoto = document.querySelector("[data-visit-photo]");
+if (visitPhoto) {
+  visitPhoto.src = siteData.visitPhoto.src;
+  visitPhoto.alt = siteData.visitPhoto.alt;
+}
 renderMission();
 renderLearning();
 renderVoices();
