@@ -1126,6 +1126,11 @@ p {
 
 /* Photos (used when a photo section is added on the day) */
 
+#visit .photo-grid {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
