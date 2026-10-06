@@ -57,10 +57,10 @@ const siteData = {
   ],
   visitPhoto: {
     title: "今日は、理工学部でミニ講義！",
-    src: "slides/images/image2.jpeg",
-    alt: "日本大学理工学部で講義をする応用情報工学科の教員",
-    caption: "講義風景（過去の写真）。今日は明和県央のみなさんと、AIで学校紹介サイトを作ります。",
-    date: "2026年10月6日 · 日本大学理工学部 船橋校舎"
+    src: "assets/photos/meiwakenoh-20261006-b-group.jpg",
+    alt: "日本大学理工学部の教室でミニ講義に参加する明和県央高等学校の1年生",
+    caption: "今日のB班。明和県央高校1年生のみなさんと、AIで学校紹介サイトを制作しました。",
+    date: "2026年10月6日 13:00 · 日本大学理工学部 船橋校舎"
   },
   mission: {
     word: "進取",
