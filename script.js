@@ -136,13 +136,14 @@ const siteData = {
   },
   game: {
     title: "明和県央クエスト",
-    body: "群馬総社駅から学校へ。広い校地を進み、C-HALLを目指す3ステージの横スクロールアクションです。敵は上から踏むと倒せます。",
-    note: "みなさんのアイデアで、敵の名前、アイテム、ステージをその場で変えられます。",
+    body: "群馬総社駅から学校へ。序盤の「朝のボス」をこえ、給食パワーを集めながらC-HALLを目指す3ステージです。敵は上から踏むと倒せます。",
+    note: "「給」「乳」「甘」の給食パワー1個につき、敵に当たっても1回だけミスになりません。",
     startTitle: "明和県央クエスト",
-    startNote: "スタートを押す／画面をタップ",
+    startNote: "給食パワーを集めて、朝のボスに挑戦！",
     hint: "← → で移動、スペースまたは ↑ でジャンプ（長押しで高く）。スマホは下のボタン。",
     playerLabel: "AI",
-    lives: 3,
+    lives: 5,
+    maxPower: 3,
     tile: 40,
     physics: {
       gravity: 0.62,
@@ -155,7 +156,7 @@ const siteData = {
     legend: [
       { symbol: "#", body: "地面・ブロック" },
       { symbol: "=", body: "すり抜け床" },
-      { symbol: "o", body: "アイテム" },
+      { symbol: "o", body: "給食パワー（1回ダメージ無効）" },
       { symbol: "E", body: "歩く敵" },
       { symbol: "F", body: "飛ぶ敵" },
       { symbol: "M-", body: "横に動く床" },
@@ -172,8 +173,9 @@ const siteData = {
         subtitle: "群馬総社駅から明和県央高校へ",
         backdrop: "town",
         palette: { sky: "#dbe8fb", sky2: "#f4f0e6", far: "#b9ccea", ground: "#162a55", surface: "#36529c", accent: "#fa8633" },
-        items: ["進", "取"],
-        enemyLabels: ["寝坊", "忘れ物", "乗り遅れ"],
+        items: ["給", "乳", "甘"],
+        boss: { label: "朝のボス" },
+        enemyLabels: ["忘れ物", "乗り遅れ", "寝坊"],
         map: [
           "........................................................................",
           "........................................................................",
@@ -641,6 +643,7 @@ function initGame() {
     stageIndex: 0,
     lives: cfg.lives || 3,
     items: 0,
+    power: 0,
     time: 0,
     total: 0,
     overlay: 0,
@@ -721,7 +724,8 @@ function initGame() {
     };
 
     let coinIndex = 0;
-    let enemyIndex = 0;
+    let regularEnemyIndex = 0;
+    let bossAssigned = false;
 
     for (let r = 0; r < world.rows; r += 1) {
       for (let c = 0; c < world.cols; c += 1) {
@@ -743,6 +747,8 @@ function initGame() {
           coinIndex += 1;
           grid[r][c] = ".";
         } else if (ch === "E") {
+          const boss = Boolean(stage.boss) && !bossAssigned;
+          if (boss) bossAssigned = true;
           world.enemies.push({
             kind: "walk",
             x: c * TILE + 4,
@@ -750,11 +756,14 @@ function initGame() {
             w: TILE - 8,
             h: TILE - 8,
             vx: P.enemySpeed,
-            label: pickLabel(stage.enemyLabels, enemyIndex),
+            label: boss
+              ? stage.boss.label
+              : pickLabel(stage.enemyLabels, regularEnemyIndex),
+            boss,
             dead: 0,
             t: 0
           });
-          enemyIndex += 1;
+          if (!boss) regularEnemyIndex += 1;
           grid[r][c] = ".";
         } else if (ch === "F") {
           world.enemies.push({
@@ -767,11 +776,11 @@ function initGame() {
             w: TILE - 8,
             h: TILE - 12,
             vx: -P.flyerSpeed,
-            label: pickLabel(stage.enemyLabels, enemyIndex),
+            label: pickLabel(stage.enemyLabels, regularEnemyIndex),
             dead: 0,
             t: 0
           });
-          enemyIndex += 1;
+          regularEnemyIndex += 1;
           grid[r][c] = ".";
         } else if (ch === "C") {
           world.checkpoints.push({ x: c * TILE + 14, y: (r - 1) * TILE, w: 14, h: TILE * 2, hit: false });
@@ -931,6 +940,7 @@ function initGame() {
   function start() {
     if (game.mode === "play" || game.mode === "ready") return;
     game.lives = cfg.lives || 3;
+    game.power = 0;
     game.total = 0;
     game.stageIndex = 0;
     buildStage(0);
@@ -1258,7 +1268,17 @@ function initGame() {
         game.shake = 6;
         burst(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2, game.world.stage.palette.accent, 12);
       } else {
-        hurt();
+        if (game.power > 0) {
+          game.power -= 1;
+          player.invuln = 90;
+          player.vx = player.x < enemy.x ? -6 : 6;
+          player.vy = -7;
+          game.shake = 10;
+          burst(player.x + player.w / 2, player.y + player.h / 2, "#f7b801", 16);
+          renderHud();
+        } else {
+          hurt();
+        }
       }
     });
   }
@@ -1275,7 +1295,10 @@ function initGame() {
       ) {
         coin.taken = true;
         game.items += 1;
+        game.power = Math.min(cfg.maxPower || 3, game.power + 1);
+        player.invuln = Math.max(player.invuln, 45);
         burst(coin.x, coin.y, "#f7b801", 8);
+        renderHud();
       }
     });
 
@@ -1368,7 +1391,10 @@ function initGame() {
     if (hud.stage) hud.stage.textContent = `${game.stageIndex + 1} / ${cfg.stages.length}`;
     if (hud.stageName) hud.stageName.textContent = stage ? stage.name : "";
     if (hud.items) hud.items.textContent = String(game.items);
-    if (hud.lives) hud.lives.textContent = String(Math.max(0, game.lives));
+    if (hud.lives) {
+      const lives = String(Math.max(0, game.lives));
+      hud.lives.textContent = game.power > 0 ? `${lives}＋給${game.power}` : lives;
+    }
     if (hud.time) hud.time.textContent = formatTime(game.total + game.time);
     if (hud.best) hud.best.textContent = game.best ? formatTime(game.best.time) : "--";
   }
@@ -1569,7 +1595,8 @@ function initGame() {
         ctx.scale(1 + enemy.dead / 26, Math.max(0.12, 1 - enemy.dead / 18));
       }
       const wobble = enemy.kind === "walk" ? Math.sin(enemy.t * 0.16) * 2 : 0;
-      ctx.fillStyle = palette.accent;
+      if (enemy.boss) ctx.scale(1.38, 1.38);
+      ctx.fillStyle = enemy.boss ? "#d7263d" : palette.accent;
       roundRect(ctx, -enemy.w / 2, -enemy.h / 2 + wobble, enemy.w, enemy.h, 9);
       ctx.fill();
       if (enemy.kind === "fly") {
@@ -1652,6 +1679,13 @@ function initGame() {
     ctx.beginPath();
     ctx.ellipse(0, 4, player.w * 0.55, 5, 0, 0, Math.PI * 2);
     ctx.fill();
+    if (game.power > 0) {
+      ctx.strokeStyle = "#f7b801";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, -player.h / 2, 24, 0, Math.PI * 2);
+      ctx.stroke();
+    }
     ctx.fillStyle = siteData.theme.brand;
     roundRect(ctx, -player.w / 2, -player.h, player.w, player.h, 8);
     ctx.fill();
