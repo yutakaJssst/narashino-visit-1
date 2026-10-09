@@ -57,9 +57,9 @@ const siteData = {
   ],
   visitPhoto: {
     title: "今日は、理工学部でミニ講義！",
-    src: "assets/photos/meiwakenoh-20261006-b-group.jpg",
-    alt: "日本大学理工学部の教室でミニ講義に参加する明和県央高等学校の1年生",
-    caption: "今日のB班。明和県央高校1年生のみなさんと、AIで学校紹介サイトを制作しました。",
+    src: "assets/photos/lecture-past.jpeg",
+    alt: "過去の講義で話す日本大学理工学部の教員",
+    caption: "過去の講義の写真です。今日はB班の1年生のみなさんと、AIで学校紹介サイトを制作しました。",
     date: "2026年10月6日 13:00 · 日本大学理工学部 船橋校舎"
   },
   mission: {
